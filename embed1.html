@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous">
+    <style>
+      .todo.completed {
+        background-color: #8de28d;
+      }
+    </style>
+		<title>Vue.js Embed ToDo</title>
+	</head>
+	<body>
+    <section id="todoapp" class="container">
+      <div class="row">
+        <div class="col-12">
+          <header class="mb-3">
+            <h1>To-Do Manager</h1>
+            <input
+              autofocus
+              autocomplete="off"
+              class="form-control"
+              placeholder="What needs to be done?"
+              v-model="newTodo"
+              @keyup.enter="addTodo">
+          </header>
+
+          <main class="mb-3" v-show="todos.length">
+            <div class="row align-items-center">
+              <div class="col-sm-2 text-center">
+                <label for="toggle-all">All Done</label>
+                <input id="toggle-all" type="checkbox" v-model="allDone">
+              </div>
+              <div class="col-sm-10">
+                <ul class="list-group">
+                  <li
+                    v-for="todo in filteredTodos"
+                    :key="todo.id"
+                    class="list-group-item todo"
+                    :class="{ completed: todo.completed }">
+                    <section>
+                      <input type="checkbox" v-model="todo.completed">
+                      <label>{{ todo.title }}</label>
+                      <button
+                        class="btn btn-danger btn-sm"
+                        style="border-radius: 25%;"
+                        @click="removeTodo(todo)">
+                        X
+                      </button>
+                    </section>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </main>
+
+          <footer class="d-flex align-items-center justify-content-center" v-if="todos.length">
+            <span>
+              <strong>{{ remaining }}</strong> {{ remaining | pluralize }} left
+            </span>
+            <div class="btn-group">
+              <button @click="changeFilter('all')"class="btn btn-outline-secondary" :class="{ active: visibility == 'all' }">All</button>
+              <button @click="changeFilter('active')"class="btn btn-outline-secondary" :class="{ active: visibility == 'active' }">Active</button>
+              <button @click="changeFilter('completed')"class="btn btn-outline-secondary" :class="{ active: visibility == 'completed' }">Completed</button>
+              <button
+                @click="removeCompleted"
+                class="btn btn-outline-danger"
+                :disabled="todos.length > remaining">
+                Clear completed
+              </button>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </section>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+      // visibility filters
+      var filters = {
+        all: function (todos) {
+          return todos
+        },
+        active: function (todos) {
+          return todos.filter(function (todo) {
+            return !todo.completed
+          })
+        },
+        completed: function (todos) {
+          return todos.filter(function (todo) {
+            return todo.completed
+          })
+        }
+      }
+
+      var vm = new Vue({
+        el: "#todoapp",
+        data: {
+          todos: [],
+          newTodo: '',
+          visibility: 'all'
+        },
+        computed: {
+          filteredTodos: function () {
+            return filters[this.visibility](this.todos)
+          },
+          remaining: function () {
+            return filters.active(this.todos).length
+          },
+          allDone: {
+            get: function () {
+              return this.remaining === 0
+            },
+            set: function (value) {
+              this.todos.forEach(function (todo) {
+                todo.completed = value
+              })
+            }
+          }
+        },
+
+        filters: {
+          pluralize: function (n) {
+            return n === 1 ? 'item' : 'items'
+          }
+        },
+
+        methods: {
+          addTodo: function () {
+            var value = this.newTodo && this.newTodo.trim()
+            if (!value) {
+              return
+            }
+            this.todos.push({
+              title: value,
+              completed: false
+            })
+            this.newTodo = ''
+          },
+
+          removeTodo: function (todo) {
+            this.todos.splice(this.todos.indexOf(todo), 1)
+          },
+
+          changeFilter: function(filter) {
+            this.visibility = filter
+          },
+
+          removeCompleted: function () {
+            this.todos = filters.active(this.todos)
+          }
+        },
+      })
+    </script>
+	</body>
+</html>
